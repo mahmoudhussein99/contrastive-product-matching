@@ -9,7 +9,7 @@ import shutil
 
 if __name__ == '__main__':
 
-    categories = ['computers']
+    categories = ['computers','cameras','shoes','watches']
     train_sizes = ['small', 'medium', 'large', 'xlarge']
 
     data = pd.read_pickle('../../../data/interim/wdc-lspc/corpus/preprocessed_english_corpus.pkl.gz')
