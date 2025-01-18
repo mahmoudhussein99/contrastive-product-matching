@@ -58,6 +58,26 @@ def serialize_sample_amazongoogle(sample):
 
     return string
 
+def serialize_sample_dblpscholar(sample):
+    string = ''
+    string = f'{string}[COL] brand [VAL] {" ".join(sample[f"authors"].split())}'.strip()
+    string = f'{string} [COL] title [VAL] {" ".join(sample[f"title"].split())}'.strip()
+    string = f'{string} [COL] price [VAL] {""}'
+    # .join(str(sample[f"year"]).split())}'.strip()
+    string = f'{string} [COL] description [VAL] {""}'
+    # .join(sample[f"venue"].split()[:100])}'.strip()
+
+    return string
+
+def serialize_sample_musicbrainz20k(sample):
+    string = ''
+    string = f'{string}[COL] brand [VAL] {" ".join(sample[f"artist"].split())}'.strip()
+    string = f'{string} [COL] title [VAL] {" ".join(sample[f"title"].split())}'.strip()
+    string = f'{string} [COL] price [VAL] {" ".join(str(sample[f"year"]).split())}'.strip()
+    string = f'{string} [COL] description [VAL] {" ".join(sample[f"album"].split()[:100])}'.strip()
+
+    return string
+
 # Class for Data Augmentation
 class Augmenter():
     def __init__(self, aug):
@@ -121,6 +141,17 @@ class ContrastivePretrainDataset(torch.utils.data.Dataset):
         if dataset == 'amazon-google':
             data['description'] = ''
                 
+        # if dataset == 'dblp-scholar':
+        #     data['venue'] = ''
+        #     data['year'] = ''
+                
+        # if dataset == 'musicbrainz20k':
+        #     data['cluster_id'] = ''
+        #     data['source'] = ''
+        #     data['number'] = ''
+        #     data['length'] = ''
+        #     data['language'] = ''
+                
         if intermediate_set is not None:
             interm_data = pd.read_pickle(intermediate_set)
             if only_interm:
@@ -165,6 +196,12 @@ class ContrastivePretrainDataset(torch.utils.data.Dataset):
         elif self.dataset == 'amazon-google':
             data['features'] = data.apply(serialize_sample_amazongoogle, axis=1)
 
+        elif self.dataset == 'dblp-scholar':
+            data['features'] = data.apply(serialize_sample_dblpscholar, axis=1)
+
+        elif self.dataset == 'musicbrainz20k':
+            data['features'] = data.apply(serialize_sample_musicbrainz20k, axis=1)
+
         label_enc = LabelEncoder()
         data['labels'] = label_enc.fit_transform(data['cluster_id'])
 
@@ -203,6 +240,10 @@ class ContrastivePretrainDatasetDeepmatcher(torch.utils.data.Dataset):
                 val = pd.read_csv('../../data/interim/abt-buy/abt-buy-valid.csv')
             elif dataset == 'amazon-google':
                 val = pd.read_csv('../../data/interim/amazon-google/amazon-google-valid.csv')
+            elif dataset == 'dblp-scholar':
+                val = pd.read_csv('../../data/interim/dblp-scholar/dblp-scholar-valid.csv')
+            elif dataset == 'musicbrainz20k':
+                val = pd.read_csv('../../data/interim/musicbrainz20k/musicbrainz20k-valid.csv')
 
             # use 80% of train and val set positives to build correspondence graph
             val_set = train_data[train_data['pair_id'].isin(val['pair_id'])]
@@ -256,6 +297,12 @@ class ContrastivePretrainDatasetDeepmatcher(torch.utils.data.Dataset):
             elif dataset == 'amazon-google':
                 left_index = [x for x in index if 'amazon' in x]
                 right_index = [x for x in index if 'google' in x]
+            elif dataset == 'dblp-scholar':
+                left_index = [x for x in index if 'dblp' in x]
+                right_index = [x for x in index if 'scholar' in x]
+            elif dataset == 'musicbrainz20k':
+                left_index = [x for x in index if 'music1' in x]
+                right_index = [x for x in index if 'music2' in x]
             
             # assing increasing integer label to single nodes
             single_entities = single_entities.reset_index(drop=True)
@@ -287,6 +334,14 @@ class ContrastivePretrainDatasetDeepmatcher(torch.utils.data.Dataset):
                     cols = data.columns
                     if 'name' in cols:
                         interm_data = interm_data.rename(columns={'title':'name'})
+                    if 'authors' in cols:
+                        interm_data = interm_data.rename(columns={'brand':'authors'})
+                    if 'artist' in cols:
+                        interm_data = interm_data.rename(columns={'brand':'artist'})
+                    if 'year' in cols:
+                        interm_data = interm_data.rename(columns={'price':'year'})
+                    if 'album' in cols:
+                        interm_data = interm_data.rename(columns={'description':'album'})
                     if 'manufacturer' in cols:
                         interm_data = interm_data.rename(columns={'brand':'manufacturer'})
                     interm_data['cluster_id'] = interm_data['cluster_id']+10000
@@ -374,6 +429,11 @@ class ContrastivePretrainDatasetDeepmatcher(torch.utils.data.Dataset):
 
         elif self.dataset == 'amazon-google':
             data['features'] = data.apply(serialize_sample_amazongoogle, axis=1)
+        elif self.dataset == 'dblp-scholar':
+            data['features'] = data.apply(serialize_sample_dblpscholar, axis=1)
+
+        elif self.dataset == 'musicbrainz20k':
+            data['features'] = data.apply(serialize_sample_musicbrainz20k, axis=1)
 
         data = data[['features', 'labels']]
 
@@ -414,6 +474,10 @@ class ContrastiveClassificationDataset(torch.utils.data.Dataset):
                 validation_ids = pd.read_csv(f'../../data/interim/abt-buy/abt-buy-valid.csv')
             elif dataset == 'amazon-google':
                 validation_ids = pd.read_csv(f'../../data/interim/amazon-google/amazon-google-valid.csv')
+            elif dataset == 'dblp-scholar':
+                validation_ids = pd.read_csv(f'../../data/interim/dblp-scholar/dblp-scholar-valid.csv')
+            elif dataset == 'musicbrainz20k':
+                validation_ids = pd.read_csv(f'../../data/interim/musicbrainz20k/musicbrainz20k-valid.csv')
             if self.dataset_type == 'train':
                 data = data[~data['pair_id'].isin(validation_ids['pair_id'])]
             else:
@@ -449,6 +513,12 @@ class ContrastiveClassificationDataset(torch.utils.data.Dataset):
         elif self.dataset == 'amazon-google':
             data['features_left'] = data.apply(self.serialize_sample_amazongoogle, args=('left',), axis=1)
             data['features_right'] = data.apply(self.serialize_sample_amazongoogle, args=('right',), axis=1)
+        elif self.dataset == 'dblp-scholar':
+            data['features_left'] = data.apply(self.serialize_sample_dblpscholar, args=('left',), axis=1)
+            data['features_right'] = data.apply(self.serialize_sample_dblpscholar, args=('right',), axis=1)
+        elif self.dataset == 'musicbrainz20k':
+            data['features_left'] = data.apply(self.serialize_sample_musicbrainz20k, args=('left',), axis=1)
+            data['features_right'] = data.apply(self.serialize_sample_musicbrainz20k, args=('right',), axis=1)
 
         data = data[['features_left', 'features_right', 'label']]
         data = data.rename(columns={'label': 'labels'})
@@ -483,5 +553,25 @@ class ContrastiveClassificationDataset(torch.utils.data.Dataset):
         string = f'{string} [COL] title [VAL] {" ".join(sample[f"title_{side}"].split())}'.strip()
         string = f'{string} [COL] price [VAL] {" ".join(str(sample[f"price_{side}"]).split())}'.strip()
         string = f'{string} [COL] description [VAL] {" ".join(sample[f"description_{side}"].split()[:100])}'.strip()
+
+        return string
+    
+    def serialize_sample_dblpscholar(sample):
+        string = ''
+        string = f'{string}[COL] brand [VAL] {" ".join(sample[f"authors"].split())}'.strip()
+        string = f'{string} [COL] title [VAL] {" ".join(sample[f"title"].split())}'.strip()
+        string = f'{string} [COL] price [VAL] {""}'
+        # .join(str(sample[f"year"]).split())}'.strip()
+        string = f'{string} [COL] description [VAL] {""}'
+        # .join(sample[f"venue"].split()[:100])}'.strip()
+
+        return string
+
+    def serialize_sample_musicbrainz20k(sample):
+        string = ''
+        string = f'{string}[COL] brand [VAL] {" ".join(sample[f"artist"].split())}'.strip()
+        string = f'{string} [COL] title [VAL] {" ".join(sample[f"title"].split())}'.strip()
+        string = f'{string} [COL] price [VAL] {" ".join(str(sample[f"year"]).split())}'.strip()
+        string = f'{string} [COL] description [VAL] {" ".join(sample[f"album"].split()[:100])}'.strip()
 
         return string
