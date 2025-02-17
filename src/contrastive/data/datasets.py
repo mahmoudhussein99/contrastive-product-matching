@@ -441,7 +441,7 @@ class ContrastivePretrainDatasetDeepmatcher(torch.utils.data.Dataset):
 
 # Dataset class for pair-wise cross-entropy fine-tuning
 class ContrastiveClassificationDataset(torch.utils.data.Dataset):
-    def __init__(self, path, dataset_type, size=None, tokenizer='huawei-noah/TinyBERT_General_4L_312D', max_length=128, dataset='lspc', aug=False):
+    def __init__(self, path, dataset_type, size=None, tokenizer='huawei-noah/TinyBERT_General_4L_312D', max_length=128, dataset='lspc', aug=False, product='computers'):
 
         self.max_length = max_length
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer, additional_special_tokens=('[COL]', '[VAL]'))
@@ -469,7 +469,7 @@ class ContrastiveClassificationDataset(torch.utils.data.Dataset):
 
         if self.dataset_type != 'test':
             if dataset == 'lspc':
-                validation_ids = pd.read_csv(f'../../data/raw/wdc-lspc/validation-sets/computers_valid_{size}.csv')
+                validation_ids = pd.read_csv(f'../../data/raw/wdc-lspc/validation-sets/{product}_valid_{size}.csv')
             elif dataset == 'abt-buy':
                 validation_ids = pd.read_csv(f'../../data/interim/abt-buy/abt-buy-valid.csv')
             elif dataset == 'amazon-google':

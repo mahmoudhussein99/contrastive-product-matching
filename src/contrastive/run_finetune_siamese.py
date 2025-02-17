@@ -83,6 +83,9 @@ class DataTrainingArguments:
     train_file: Optional[str] = field(
         default=None, metadata={"help": "The input training data file (a jsonlines or csv file)."}
     )
+    product: Optional[str] = field(
+        default="computers", metadata={"help": "product for lspc"}
+    )
     train_size: Optional[str] = field(
         default=None, metadata={"help": "The size of the training set."}
     )
@@ -206,25 +209,25 @@ def main():
         if "train" not in raw_datasets:
             raise ValueError("--do_train requires a train dataset")
         train_dataset = raw_datasets["train"]
-        train_dataset = ContrastiveClassificationDataset(train_dataset, dataset_type='train', size=data_args.train_size, tokenizer=model_args.tokenizer, dataset=data_args.dataset_name, aug=data_args.augment)
+        train_dataset = ContrastiveClassificationDataset(train_dataset, dataset_type='train', size=data_args.train_size, tokenizer=model_args.tokenizer, dataset=data_args.dataset_name, aug=data_args.augment,product=data_args.product)
         if training_args.evaluation_strategy != 'no':
             validation_dataset = raw_datasets["validation"]
-            validation_dataset = ContrastiveClassificationDataset(validation_dataset, dataset_type='validation', size=data_args.train_size, tokenizer=model_args.tokenizer, dataset=data_args.dataset_name)
+            validation_dataset = ContrastiveClassificationDataset(validation_dataset, dataset_type='validation', size=data_args.train_size, tokenizer=model_args.tokenizer, dataset=data_args.dataset_name,product=data_args.product)
         if training_args.load_best_model_at_end:
             test_dataset = raw_datasets["test"]
-            test_dataset = ContrastiveClassificationDataset(test_dataset, dataset_type='test', size=data_args.train_size, tokenizer=model_args.tokenizer, dataset=data_args.dataset_name)
+            test_dataset = ContrastiveClassificationDataset(test_dataset, dataset_type='test', size=data_args.train_size, tokenizer=model_args.tokenizer, dataset=data_args.dataset_name,product=data_args.product)
 
     elif training_args.do_eval:
         if "validation" not in raw_datasets:
             raise ValueError("--do_eval requires a validation dataset")
         validation_dataset = raw_datasets["validation"]
-        validation_dataset = ContrastiveClassificationDataset(validation_dataset, dataset_type='validation', size=data_args.train_size, tokenizer=model_args.tokenizer, dataset=data_args.dataset_name)
+        validation_dataset = ContrastiveClassificationDataset(validation_dataset, dataset_type='validation', size=data_args.train_size, tokenizer=model_args.tokenizer, dataset=data_args.dataset_name,product=data_args.product)
 
     elif training_args.do_predict:
         if "test" not in raw_datasets:
             raise ValueError("--do_predict requires a test dataset")
         test_dataset = raw_datasets["test"]
-        test_dataset = ContrastiveClassificationDataset(test_dataset, dataset_type='test', size=data_args.train_size, tokenizer=model_args.tokenizer, dataset=data_args.dataset_name)
+        test_dataset = ContrastiveClassificationDataset(test_dataset, dataset_type='test', size=data_args.train_size, tokenizer=model_args.tokenizer, dataset=data_args.dataset_name,product=data_args.product)
 
     # Data collator
     data_collator = DataCollatorContrastiveClassification(tokenizer=train_dataset.tokenizer)

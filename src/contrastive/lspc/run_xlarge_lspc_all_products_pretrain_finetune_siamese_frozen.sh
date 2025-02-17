@@ -17,11 +17,11 @@ SIZE="xlarge"
 # PRODUCT=$5
 AUG="all"
 POSTAUG="all"
-products=("watches" "shoes" "cameras")
-# computers
+products=("watches" "cameras" "shoes")
+# "computers" "shoes"
 for PRODUCT in "${products[@]}"
 do
-    CUDA_VISIBLE_DEVICES=3 python run_pretraining.py \
+    CUDA_VISIBLE_DEVICES=2 python run_pretraining.py \
         --do_train \
         --train_file /scratch/mhussein/contrastive-product-matching/data/processed/wdc-lspc/contrastive/pre-train/"$PRODUCT"/"$PRODUCT"_train_$SIZE.pkl.gz \
         --id_deduction_set /scratch/mhussein/contrastive-product-matching/data/raw/wdc-lspc/training-sets/"$PRODUCT"_train_$SIZE.json.gz \
@@ -32,7 +32,7 @@ do
         --per_device_train_batch_size=$BATCH \
         --learning_rate=$LR \
         --weight_decay=0.01 \
-        --num_train_epochs=200 \
+        --num_train_epochs=50 \
         --lr_scheduler_type="linear" \
         --warmup_ratio=0.05 \
         --max_grad_norm=1.0 \
@@ -40,10 +40,11 @@ do
         --dataloader_num_workers=4 \
         --disable_tqdm=True \
         --save_strategy="epoch" \
+        --product $PRODUCT \
         --logging_strategy="epoch" \
         --augment=$AUG \
     
-    CUDA_VISIBLE_DEVICES=3 python run_finetune_siamese.py \
+    CUDA_VISIBLE_DEVICES=2 python run_finetune_siamese.py \
 	--model_pretrained_checkpoint /scratch/mhussein/contrastive-product-matching/reports/contrastive/"$PRODUCT"-$SIZE-$AUG$BATCH-$LR-$TEMP-roberta-base/pytorch_model.bin \
     --do_train \
     --train_file /scratch/mhussein/contrastive-product-matching/data/interim/wdc-lspc/training-sets/preprocessed_"$PRODUCT"_train_$SIZE.pkl.gz \
@@ -57,11 +58,12 @@ do
 	--per_device_train_batch_size=64 \
 	--learning_rate=5e-05 \
 	--weight_decay=0.01 \
-	--num_train_epochs=50 \
+	--num_train_epochs=20 \
 	--lr_scheduler_type="linear" \
 	--warmup_ratio=0.05 \
 	--max_grad_norm=1.0 \
 	--fp16 \
+    --product $PRODUCT \
 	--metric_for_best_model=loss \
 	--dataloader_num_workers=4 \
 	--disable_tqdm=True \
